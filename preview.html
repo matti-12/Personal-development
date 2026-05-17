@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeOS — App Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #060608;
+    color: #fff;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+
+  /* ─── Layout ──────────────────────────────── */
+  h1.page-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    text-align: center;
+    font-size: 14px;
+    color: #6060A0;
+    margin-bottom: 48px;
+  }
+  .screens-row {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .screen-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .screen-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7C5CF8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ─── Phone Shell ─────────────────────────── */
+  .phone {
+    width: 340px;
+    height: 720px;
+    background: #0A0A0F;
+    border-radius: 40px;
+    border: 2px solid #2A2A3A;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 1px #1A1A2A,
+      0 32px 80px rgba(0,0,0,0.9),
+      0 0 120px rgba(124,92,248,0.06);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 40px;
+    background: #0A0A0F;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+  .status-bar .time { font-size: 12px; font-weight: 600; color: #fff; }
+  .status-bar .icons { font-size: 11px; color: #fff; display: flex; gap: 6px; }
+
+  /* Screen content */
+  .screen-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 12px 14px;
+    position: relative;
+  }
+  .screen-content.no-pad { padding: 0; }
+
+  /* Tab bar */
+  .tab-bar {
+    height: 64px;
+    background: rgba(12,12,20,0.97);
+    border-top: 1px solid #1E1E2E;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 8px;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding-top: 8px;
+    opacity: 0.45;
+  }
+  .tab-item.active { opacity: 1; }
+  .tab-item .tab-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .tab-item.active .tab-icon { background: rgba(124,92,248,0.18); }
+  .tab-item .tab-label { font-size: 9px; font-weight: 600; color: #9090B0; }
+  .tab-item.active .tab-label { color: #7C5CF8; }
+
+  /* ─── Shared Components ───────────────────── */
+  .card {
+    background: #1A1A26;
+    border-radius: 16px;
+    border: 1px solid #2A2A3A;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .card-sm { padding: 10px 12px; }
+  .section-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+  .muted { color: #6060A0; }
+  .text-xs { font-size: 11px; }
+  .text-sm { font-size: 13px; }
+  .text-base { font-size: 15px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; }
+  .col { display: flex; flex-direction: column; }
+
+  /* Progress bar */
+  .progress-track {
+    height: 4px; background: #2A2A3A; border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill { height: 4px; border-radius: 2px; }
+
+  /* Progress ring */
+  .ring-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .ring-label { position: absolute; text-align: center; }
+
+  /* Chip */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 100px;
+    font-size: 11px; font-weight: 600;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ─── HOME SCREEN ─────────────────────────── */
+  .greeting-date { font-size: 12px; color: #6060A0; font-weight: 500; margin-bottom: 2px; }
+  .greeting-name { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; line-height: 28px; }
+  .chips-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+  .overview-row { display: flex; justify-content: space-around; }
+  .overview-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ring-bg { stroke: rgba(255,255,255,0.06); }
+
+  .habit-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid #1E1E2E;
+  }
+  .habit-check {
+    width: 30px; height: 30px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .habit-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .streak-pill {
+    font-size: 11px; font-weight: 600;
+  }
+  .check-circle {
+    width: 20px; height: 20px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 10px; font-weight: 700;
+  }
+
+  .mood-row { display: flex; justify-content: space-between; }
+  .mood-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 6px; border-radius: 12px; cursor: pointer;
+    border: 1.5px solid transparent;
+  }
+  .mood-item.selected { border-color: #7C5CF8; background: rgba(124,92,248,0.12); }
+  .mood-emoji { font-size: 24px; }
+  .mood-label { font-size: 9px; color: #6060A0; font-weight: 500; }
+  .mood-item.selected .mood-label { color: #7C5CF8; font-weight: 600; }
+
+  /* ─── GOALS SCREEN ────────────────────────── */
+  .filter-row { display: flex; gap: 6px; overflow: hidden; margin-bottom: 14px; }
+  .filter-chip {
+    padding: 5px 12px; border-radius: 100px;
+    font-size: 11px; font-weight: 600;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .goal-card { margin-bottom: 10px; }
+  .goal-meta { display: flex; gap: 6px; margin-bottom: 8px; }
+  .goal-title { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .goal-desc { font-size: 12px; color: #6060A0; margin-bottom: 10px; }
+  .goal-stats { display: flex; gap: 14px; margin-bottom: 12px; }
+  .goal-stat { display: flex; flex-direction: column; }
+  .goal-stat-label { font-size: 10px; color: #6060A0; }
+  .goal-stat-val { font-size: 13px; font-weight: 600; }
+  .milestone-row {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px;
+  }
+  .milestone-tag {
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 500;
+  }
+
+  /* ─── NOTES SCREEN ────────────────────────── */
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: #1A1A26; border-radius: 12px; padding: 10px 12px;
+    border: 1px solid #2A2A3A; margin-bottom: 12px;
+    font-size: 13px; color: #6060A0;
+  }
+  .note-card { margin-bottom: 8px; }
+  .note-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .note-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .note-preview { font-size: 12px; color: #7070A0; line-height: 1.5; margin-bottom: 8px; }
+  .tag-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .tag { padding: 2px 7px; border-radius: 5px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 10px; color: #6060A0; }
+
+  /* ─── ANALYTICS SCREEN ────────────────────── */
+  .period-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .period-btn {
+    flex: 1; padding: 8px; border-radius: 10px; text-align: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-card {
+    border-radius: 14px; padding: 14px;
+    border: 1px solid;
+  }
+  .stat-emoji { font-size: 20px; margin-bottom: 8px; display: block; }
+  .stat-value { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+  .stat-label { font-size: 10px; color: #6060A0; }
+
+  /* Mini bar chart */
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 60px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bar { border-radius: 3px 3px 0 0; width: 100%; }
+  .bar-label { font-size: 9px; color: #5050A0; font-weight: 500; }
+
+  /* Mini heatmap */
+  .heatmap { display: flex; gap: 3px; }
+  .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+  .heatmap-cell { width: 18px; height: 18px; border-radius: 4px; }
+
+  /* ─── ANALYTICS RINGS ─────────────────────── */
+  .perf-row { display: flex; justify-content: space-around; }
+  .perf-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+  /* ─── MORE SCREEN ─────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi-box {
+    border-radius: 12px; padding: 12px;
+    border: 1px solid;
+  }
+  .kpi-label { font-size: 10px; color: #6060A0; margin-bottom: 3px; }
+  .kpi-value { font-size: 18px; font-weight: 700; margin-bottom: 1px; }
+  .kpi-target { font-size: 10px; color: #6060A0; }
+
+  .trip-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1E1E2E; }
+  .trip-emoji-box {
+    width: 46px; height: 46px; border-radius: 14px;
+    background: rgba(92,156,248,0.1); display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  .trip-days { font-size: 22px; font-weight: 700; color: #7C5CF8; line-height: 1; }
+
+  /* Scrollbar hidden */
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  /* ─── Gradient accents ────────────────────── */
+  .gradient-ring {
+    background: conic-gradient(#7C5CF8 0% 65%, #2A2A3A 65% 100%);
+    border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">LifeOS — App Preview</h1>
+<p class="page-sub">React Native · Expo · TypeScript · Dark Mode · 100% Offline</p>
+
+<div class="screens-row">
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 1: HOME
+  ══════════════════════════════════════════ -->
+  <div class="screen-wrap">
+    <div class="screen-label">Home</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">▲ ● ▮▮▮</span>
+      </div>
+      <div class="screen-content" style="overflow-y:hidden;">
+
+        <!-- Greeting -->
+        <div class="greeting-date">Sunday, May 17</div>
+        <div class="greeting-name">Good morning,<br>Matti ☀️</div>
+        <div class="chips-row">
+          <div class="chip" style="background:rgba(124,92,248,0.12);border:1px solid rgba(124,92,248,0.3)">
+            <div class="dot" style="background:#7C5CF8"></div>
+            <span style="color:#7C5CF8">Focus 78</span>
+          </div>
+          <div class="chip" style="background:rgba(92,248,200,0.1);border:1px solid rgba(92,248,200,0.25)">
+            <div class="dot" style="background:#5CF8C8"></div>
+            <span style="color:#5CF8C8">Productivity 82</span>
+          </div>
+        </div>
+
+        <!-- Daily Overview card -->
+        <div class="card" style="padding:12px 14px">
+          <div class="row-between" style="margin-bottom:12px">
+            <span class="section-title" style="margin:0;font-size:14px">Today's Overview</span>
+          </div>
+          <div class="overview-row">
+            <!-- Ring: Tasks -->
+            <div class="overview-item">
+              <svg width="68" height="68" viewBox="0 0 68 68">
+                <circle cx="34" cy="34" r="28" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                <circle cx="34" cy="34" r="28" stroke="#7C5CF8" stroke-width="6" fill="none"
+                  stroke-dasharray="175.9" stroke-dashoffset="61.6" stroke-linecap="round"
+                  transform="rotate(-90 34 34)"/>
+                <text x="34" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#7C5CF8">65%</text>
+              </svg>
+              <span style="font-size:11px;font-weight:600">Tasks</span>
+              <span style="font-size:10px;color:#5050A0">4/6 done</span>
+            </div>
+            <!-- Ring: Habits -->
+            <div class="overview-item">
+              <svg width="68" height="68" viewBox="0 0 68 68">
+                <circle cx="34" cy="34" r="28" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                <circle cx="34" cy="34" r="28" stroke="#5CF8C8" stroke-width="6" fill="none"
+                  stroke-dasharray="175.9" stroke-dashoffset="70.4" stroke-linecap="round"
+                  transform="rotate(-90 34 34)"/>
+                <text x="34" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#5CF8C8">60%</text>
+              </svg>
+              <span style="font-size:11px;font-weight:600">Habits</span>
+              <span style="font-size:10px;color:#5050A0">4/6 done</span>
+            </div>
+            <!-- Ring: Goals -->
+            <div class="overview-item">
+              <svg width="68" height="68" viewBox="0 0 68 68">
+                <circle cx="34" cy="34" r="28" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                <circle cx="34" cy="34" r="28" stroke="#F8A85C" stroke-width="6" fill="none"
+                  stroke-dasharray="175.9" stroke-dashoffset="61.6" stroke-linecap="round"
+                  transform="rotate(-90 34 34)"/>
+                <text x="34" y="37" text-anchor="middle" font-size="12" font-weight="700" fill="#F8A85C">65%</text>
+              </svg>
+              <span style="font-size:11px;font-weight:600">Goals</span>
+              <span style="font-size:10px;color:#5050A0">5 active</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mood Tracker -->
+        <div class="card" style="padding:10px 12px">
+          <div class="section-title" style="font-size:13px;margin-bottom:2px">How are you feeling?</div>
+          <div style="font-size:10px;color:#6060A0;margin-bottom:10px">Track your mood</div>
+          <div class="mood-row">
+            <div class="mood-item"><div class="mood-emoji">😫</div><div class="mood-label">Rough</div></div>
+            <div class="mood-item"><div class="mood-emoji">😐</div><div class="mood-label">Okay</div></div>
+            <div class="mood-item selected"><div class="mood-emoji">😊</div><div class="mood-label">Great</div></div>
+            <div class="mood-item"><div class="mood-emoji">🤩</div><div class="mood-label">Amazing</div></div>
+          </div>
+        </div>
+
+        <!-- Habits strip -->
+        <div class="card" style="padding:10px 12px">
+          <div class="row-between" style="margin-bottom:10px">
+            <span class="section-title" style="margin:0;font-size:13px">Habits</span>
+            <span style="font-size:11px;color:#5050A0">4/6 done</span>
+          </div>
+          <div class="habit-row" style="padding:6px 0">
+            <div class="habit-check" style="background:rgba(124,92,248,0.15);border:1.5px solid #7C5CF8">🧘</div>
+            <span class="habit-name" style="font-size:13px">Morning Meditation</span>
+            <span class="streak-pill" style="color:#F8A85C">🔥 14</span>
+            <div class="check-circle" style="background:#7C5CF8;color:#fff">✓</div>
+          </div>
+          <div class="habit-row" style="padding:6px 0">
+            <div class="habit-check" style="background:rgba(92,248,200,0.1);border:1.5px solid rgba(255,255,255,0.12)">💪</div>
+            <span class="habit-name" style="font-size:13px">Exercise</span>
+            <span class="streak-pill" style="color:#F8A85C">🔥 8</span>
+            <div class="check-circle" style="border:2px solid #2A2A3A"></div>
+          </div>
+          <div class="habit-row" style="padding:6px 0;border:none">
+            <div class="habit-check" style="background:rgba(92,156,248,0.15);border:1.5px solid #5C9CF8">📚</div>
+            <span class="habit-name" style="font-size:13px">Read 30 min</span>
+            <span class="streak-pill" style="color:#F8A85C">🔥 5</span>
+            <div class="check-circle" style="background:#5C9CF8;color:#fff">✓</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item active">
+          <div class="tab-icon">⚡</div>
+          <span class="tab-label" style="color:#7C5CF8">Home</span>
+        </div>
+        <div class="tab-item"><div class="tab-icon">🎯</div><span class="tab-label">Goals</span></div>
+        <div class="tab-item"><div class="tab-icon">📅</div><span class="tab-label">Calendar</span></div>
+        <div class="tab-item"><div class="tab-icon">📝</div><span class="tab-label">Notes</span></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><span class="tab-label">Analytics</span></div>
+        <div class="tab-item"><div class="tab-icon">⋯</div><span class="tab-label">More</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 2: GOALS
+  ══════════════════════════════════════════ -->
+  <div class="screen-wrap">
+    <div class="screen-label">Goals</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">▲ ● ▮▮▮</span>
+      </div>
+      <div class="screen-content" style="overflow-y:hidden">
+        <div class="row-between" style="margin-bottom:14px">
+          <div>
+            <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px">Goals</div>
+            <div style="font-size:11px;color:#5050A0;margin-top:2px">5 active · 65% avg</div>
+          </div>
+          <div style="background:#7C5CF8;border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff">+</div>
+        </div>
+
+        <!-- Stats row -->
+        <div style="display:flex;gap:6px;margin-bottom:14px">
+          <div style="flex:1;background:rgba(124,92,248,0.1);border:1px solid rgba(124,92,248,0.2);border-radius:12px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#7C5CF8">5</div>
+            <div style="font-size:9px;color:#5050A0">Active</div>
+          </div>
+          <div style="flex:1;background:rgba(92,248,200,0.1);border:1px solid rgba(92,248,200,0.2);border-radius:12px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#5CF8C8">65%</div>
+            <div style="font-size:9px;color:#5050A0">Avg</div>
+          </div>
+          <div style="flex:1;background:rgba(76,175,125,0.1);border:1px solid rgba(76,175,125,0.2);border-radius:12px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#4CAF7D">3</div>
+            <div style="font-size:9px;color:#5050A0">On Track</div>
+          </div>
+          <div style="flex:1;background:rgba(248,92,92,0.1);border:1px solid rgba(248,92,92,0.2);border-radius:12px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#F85C5C">3</div>
+            <div style="font-size:9px;color:#5050A0">High</div>
+          </div>
+        </div>
+
+        <!-- Category filter -->
+        <div class="filter-row" style="margin-bottom:12px">
+          <div class="filter-chip" style="background:#7C5CF8;color:#fff">All</div>
+          <div class="filter-chip" style="background:rgba(124,92,248,0.12);color:#7C5CF8;border:1px solid rgba(124,92,248,0.25)">Business</div>
+          <div class="filter-chip" style="background:rgba(92,248,200,0.1);color:#5CF8C8;border:1px solid rgba(92,248,200,0.2)">Fitness</div>
+          <div class="filter-chip" style="background:rgba(248,168,92,0.1);color:#F8A85C;border:1px solid rgba(248,168,92,0.2)">Financial</div>
+        </div>
+
+        <!-- Goal card 1 -->
+        <div class="card goal-card">
+          <div class="row-between">
+            <div style="flex:1;margin-right:12px">
+              <div class="goal-meta">
+                <div class="badge" style="background:rgba(124,92,248,0.15);color:#7C5CF8;border:1px solid rgba(124,92,248,0.3)">Business</div>
+                <div class="badge" style="background:rgba(248,92,92,0.1);color:#F85C5C;border:1px solid rgba(248,92,92,0.25)">high</div>
+              </div>
+              <div class="goal-title">Launch SaaS Product</div>
+              <div class="goal-desc">Build and launch the MVP</div>
+              <div class="goal-stats">
+                <div class="goal-stat">
+                  <span class="goal-stat-label">Progress</span>
+                  <span class="goal-stat-val" style="color:#7C5CF8">65%</span>
+                </div>
+                <div class="goal-stat">
+                  <span class="goal-stat-label">Deadline</span>
+                  <span class="goal-stat-val">75 days</span>
+                </div>
+                <div class="goal-stat">
+                  <span class="goal-stat-label">Streak</span>
+                  <span class="goal-stat-val" style="color:#F8A85C">🔥 12d</span>
+                </div>
+              </div>
+            </div>
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+              <circle cx="32" cy="32" r="26" stroke="#7C5CF8" stroke-width="6" fill="none"
+                stroke-dasharray="163.4" stroke-dashoffset="57.2" stroke-linecap="round"
+                transform="rotate(-90 32 32)"/>
+              <text x="32" y="36" text-anchor="middle" font-size="12" font-weight="700" fill="#7C5CF8">65%</text>
+            </svg>
+          </div>
+          <div class="progress-track" style="margin-top:10px">
+            <div class="progress-fill" style="width:65%;background:#7C5CF8"></div>
+          </div>
+          <div class="milestone-row">
+            <div class="milestone-tag" style="background:rgba(124,92,248,0.15);color:#7C5CF8;text-decoration:line-through;opacity:0.6">✓ Market research</div>
+            <div class="milestone-tag" style="background:rgba(124,92,248,0.15);color:#7C5CF8;text-decoration:line-through;opacity:0.6">✓ MVP design</div>
+            <div class="milestone-tag" style="background:#1E1E2E;color:#5050A0;border:1px solid #2A2A3A">Core features</div>
+          </div>
+        </div>
+
+        <!-- Goal card 2 -->
+        <div class="card goal-card">
+          <div class="row-between">
+            <div style="flex:1;margin-right:12px">
+              <div class="goal-meta">
+                <div class="badge" style="background:rgba(92,248,200,0.1);color:#5CF8C8;border:1px solid rgba(92,248,200,0.25)">Fitness</div>
+              </div>
+              <div class="goal-title">Run a Marathon</div>
+              <div class="goal-desc">Complete first full marathon</div>
+              <div class="goal-stats">
+                <div class="goal-stat">
+                  <span class="goal-stat-label">Progress</span>
+                  <span class="goal-stat-val" style="color:#5CF8C8">42km</span>
+                </div>
+                <div class="goal-stat">
+                  <span class="goal-stat-label">Streak</span>
+                  <span class="goal-stat-val" style="color:#F8A85C">🔥 8d</span>
+                </div>
+              </div>
+            </div>
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+              <circle cx="32" cy="32" r="26" stroke="#5CF8C8" stroke-width="6" fill="none"
+                stroke-dasharray="163.4" stroke-dashoffset="94.8" stroke-linecap="round"
+                transform="rotate(-90 32 32)"/>
+              <text x="32" y="36" text-anchor="middle" font-size="12" font-weight="700" fill="#5CF8C8">42%</text>
+            </svg>
+          </div>
+          <div class="progress-track" style="margin-top:10px">
+            <div class="progress-fill" style="width:42%;background:#5CF8C8"></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">⚡</div><span class="tab-label">Home</span></div>
+        <div class="tab-item active"><div class="tab-icon">🎯</div><span class="tab-label" style="color:#7C5CF8">Goals</span></div>
+        <div class="tab-item"><div class="tab-icon">📅</div><span class="tab-label">Calendar</span></div>
+        <div class="tab-item"><div class="tab-icon">📝</div><span class="tab-label">Notes</span></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><span class="tab-label">Analytics</span></div>
+        <div class="tab-item"><div class="tab-icon">⋯</div><span class="tab-label">More</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 3: NOTES
+  ══════════════════════════════════════════ -->
+  <div class="screen-wrap">
+    <div class="screen-label">Notes</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">▲ ● ▮▮▮</span>
+      </div>
+      <div class="screen-content" style="overflow-y:hidden">
+        <div class="row-between" style="margin-bottom:14px">
+          <div>
+            <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px">Notes</div>
+            <div style="font-size:11px;color:#5050A0;margin-top:2px">6 notes · 3 favorites</div>
+          </div>
+          <div style="background:#7C5CF8;border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff">+</div>
+        </div>
+
+        <div class="search-bar">🔍  Search notes...</div>
+
+        <!-- Folder chips -->
+        <div class="filter-row" style="margin-bottom:12px">
+          <div class="filter-chip" style="background:#7C5CF8;color:#fff">All</div>
+          <div class="filter-chip" style="background:rgba(92,248,200,0.1);color:#5CF8C8;border:1px solid rgba(92,248,200,0.2)">Personal</div>
+          <div class="filter-chip" style="background:rgba(124,92,248,0.12);color:#7C5CF8;border:1px solid rgba(124,92,248,0.25)">Work</div>
+          <div class="filter-chip" style="background:rgba(248,168,92,0.1);color:#F8A85C;border:1px solid rgba(248,168,92,0.2)">Ideas</div>
+        </div>
+
+        <div style="font-size:10px;color:#5050A0;font-weight:600;margin-bottom:8px;padding-left:2px">📌 PINNED</div>
+
+        <!-- Note 1 - pinned -->
+        <div class="card note-card">
+          <div class="note-header">
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                <span style="font-size:11px">📌</span>
+                <span style="font-size:11px">⭐</span>
+                <div class="badge" style="background:rgba(124,92,248,0.12);color:#7C5CF8;border:1px solid rgba(124,92,248,0.25);font-size:10px">Work</div>
+              </div>
+              <div class="note-title">SaaS Product Vision</div>
+            </div>
+            <div style="font-size:10px;color:#5050A0;white-space:nowrap">May 16</div>
+          </div>
+          <div class="note-preview">Building a personal OS for ambitious people. The core insight is that most productivity apps are too generic...</div>
+          <div class="tag-row">
+            <div class="tag">#startup</div>
+            <div class="tag">#ideas</div>
+            <div class="tag">#strategy</div>
+            <div style="margin-left:auto;font-size:10px;color:#5050A0">84 words</div>
+          </div>
+        </div>
+
+        <!-- Note 2 -->
+        <div class="card note-card">
+          <div class="note-header">
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                <span style="font-size:11px">📌</span>
+                <div class="badge" style="background:rgba(92,248,200,0.08);color:#5CF8C8;border:1px solid rgba(92,248,200,0.2);font-size:10px">Personal</div>
+              </div>
+              <div class="note-title">Morning Routine</div>
+            </div>
+            <div style="font-size:10px;color:#5050A0">May 12</div>
+          </div>
+          <div class="note-preview">6:00 Wake up, no phone · 6:05 Cold shower · 6:15 Meditation · 6:30 Exercise...</div>
+          <div class="tag-row">
+            <div class="tag">#routine</div>
+            <div class="tag">#productivity</div>
+            <div style="margin-left:auto;font-size:10px;color:#5050A0">52 words</div>
+          </div>
+        </div>
+
+        <div style="font-size:10px;color:#5050A0;font-weight:600;margin-bottom:8px;padding-left:2px;margin-top:4px">ALL NOTES</div>
+
+        <!-- Note 3 -->
+        <div class="card note-card">
+          <div class="note-header">
+            <div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+                <span style="font-size:11px">⭐</span>
+                <div class="badge" style="background:rgba(92,156,248,0.1);color:#5C9CF8;border:1px solid rgba(92,156,248,0.2);font-size:10px">Travel</div>
+              </div>
+              <div class="note-title">Japan Trip Planning</div>
+            </div>
+            <div style="font-size:10px;color:#5050A0">May 1</div>
+          </div>
+          <div class="note-preview">Shinjuku, Arashiyama Bamboo Forest, Fushimi Inari, Dotonbori...</div>
+          <div class="tag-row">
+            <div class="tag">#japan</div>
+            <div class="tag">#2026</div>
+            <div style="margin-left:auto;font-size:10px;color:#5050A0">61 words</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">⚡</div><span class="tab-label">Home</span></div>
+        <div class="tab-item"><div class="tab-icon">🎯</div><span class="tab-label">Goals</span></div>
+        <div class="tab-item"><div class="tab-icon">📅</div><span class="tab-label">Calendar</span></div>
+        <div class="tab-item active"><div class="tab-icon">📝</div><span class="tab-label" style="color:#7C5CF8">Notes</span></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><span class="tab-label">Analytics</span></div>
+        <div class="tab-item"><div class="tab-icon">⋯</div><span class="tab-label">More</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 4: ANALYTICS
+  ══════════════════════════════════════════ -->
+  <div class="screen-wrap">
+    <div class="screen-label">Analytics</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">▲ ● ▮▮▮</span>
+      </div>
+      <div class="screen-content" style="overflow-y:hidden">
+        <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:3px">Analytics</div>
+        <div style="font-size:11px;color:#5050A0;margin-bottom:14px">Your performance insights</div>
+
+        <!-- Period -->
+        <div class="period-row">
+          <div class="period-btn" style="background:#7C5CF8;color:#fff">7d</div>
+          <div class="period-btn" style="background:rgba(255,255,255,0.04);color:#6060A0;border:1px solid rgba(255,255,255,0.08)">30d</div>
+          <div class="period-btn" style="background:rgba(255,255,255,0.04);color:#6060A0;border:1px solid rgba(255,255,255,0.08)">90d</div>
+        </div>
+
+        <!-- Perf rings -->
+        <div class="card" style="margin-bottom:10px">
+          <div class="section-title" style="font-size:13px;margin-bottom:12px">Performance Summary</div>
+          <div class="perf-row">
+            <div class="perf-item">
+              <svg width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                <circle cx="32" cy="32" r="26" stroke="#7C5CF8" stroke-width="6" fill="none"
+                  stroke-dasharray="163.4" stroke-dashoffset="47.4" stroke-linecap="round"
+                  transform="rotate(-90 32 32)"/>
+                <text x="32" y="36" text-anchor="middle" font-size="11" font-weight="700" fill="#7C5CF8">79%</text>
+              </svg>
+              <span style="font-size:10px;font-weight:600">Productivity</span>
+            </div>
+            <div class="perf-item">
+              <svg width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                <circle cx="32" cy="32" r="26" stroke="#5CF8C8" stroke-width="6" fill="none"
+                  stroke-dasharray="163.4" stroke-dashoffset="50.7" stroke-linecap="round"
+                  transform="rotate(-90 32 32)"/>
+                <text x="32" y="36" text-anchor="middle" font-size="11" font-weight="700" fill="#5CF8C8">73%</text>
+              </svg>
+              <span style="font-size:10px;font-weight:600">Focus</span>
+            </div>
+            <div class="perf-item">
+              <svg width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.06)" stroke-width="6" fill="none"/>
+                <circle cx="32" cy="32" r="26" stroke="#F8A85C" stroke-width="6" fill="none"
+                  stroke-dasharray="163.4" stroke-dashoffset="37.6" stroke-linecap="round"
+                  transform="rotate(-90 32 32)"/>
+                <text x="32" y="36" text-anchor="middle" font-size="11" font-weight="700" fill="#F8A85C">77%</text>
+              </svg>
+              <span style="font-size:10px;font-weight:600">Mood</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="stat-card" style="background:rgba(124,92,248,0.08);border-color:rgba(124,92,248,0.2)">
+            <span class="stat-emoji">⚡</span>
+            <div class="stat-value" style="color:#7C5CF8;font-size:20px">79%</div>
+            <div class="stat-label">Avg Productivity</div>
+          </div>
+          <div class="stat-card" style="background:rgba(92,248,200,0.07);border-color:rgba(92,248,200,0.18)">
+            <span class="stat-emoji">🎯</span>
+            <div class="stat-value" style="color:#5CF8C8;font-size:20px">73%</div>
+            <div class="stat-label">Avg Focus</div>
+          </div>
+          <div class="stat-card" style="background:rgba(248,168,92,0.08);border-color:rgba(248,168,92,0.2)">
+            <span class="stat-emoji">😊</span>
+            <div class="stat-value" style="color:#F8A85C;font-size:20px">7.7</div>
+            <div class="stat-label">Avg Mood</div>
+          </div>
+          <div class="stat-card" style="background:rgba(248,168,92,0.08);border-color:rgba(248,168,92,0.2)">
+            <span class="stat-emoji">🔥</span>
+            <div class="stat-value" style="color:#F8A85C;font-size:20px">21d</div>
+            <div class="stat-label">Top Streak</div>
+          </div>
+        </div>
+
+        <!-- Bar chart -->
+        <div class="card" style="padding:12px 14px">
+          <div class="section-title" style="font-size:13px;margin-bottom:2px">Productivity Trend</div>
+          <div style="font-size:10px;color:#5050A0;margin-bottom:10px">Last 7 days</div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:43px;background:rgba(124,92,248,0.7)"></div><div class="bar-label">M</div></div>
+            <div class="bar-col"><div class="bar" style="height:51px;background:#7C5CF8"></div><div class="bar-label">T</div></div>
+            <div class="bar-col"><div class="bar" style="height:36px;background:rgba(124,92,248,0.6)"></div><div class="bar-label">W</div></div>
+            <div class="bar-col"><div class="bar" style="height:54px;background:#7C5CF8"></div><div class="bar-label">T</div></div>
+            <div class="bar-col"><div class="bar" style="height:47px;background:rgba(124,92,248,0.8)"></div><div class="bar-label">F</div></div>
+            <div class="bar-col"><div class="bar" style="height:24px;background:rgba(124,92,248,0.4)"></div><div class="bar-label">S</div></div>
+            <div class="bar-col"><div class="bar" style="height:49px;background:rgba(124,92,248,0.85)"></div><div class="bar-label">S</div></div>
+          </div>
+        </div>
+
+        <!-- Habit heatmap preview -->
+        <div class="card" style="padding:12px 14px">
+          <div class="section-title" style="font-size:13px;margin-bottom:10px">Habit Consistency — 🧘 Meditation</div>
+          <div class="heatmap">
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:rgba(124,92,248,0.1)"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+            </div>
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:rgba(124,92,248,0.1)"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+            </div>
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:rgba(124,92,248,0.1)"></div>
+            </div>
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:rgba(124,92,248,0.1)"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+            </div>
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:rgba(124,92,248,0.1)"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+            </div>
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+            </div>
+            <div class="heatmap-col">
+              <div class="heatmap-cell" style="background:rgba(124,92,248,0.1)"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+              <div class="heatmap-cell" style="background:#7C5CF8"></div>
+            </div>
+          </div>
+          <div style="margin-top:6px;font-size:10px;color:#F8A85C;font-weight:600">🔥 14-day streak</div>
+        </div>
+
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">⚡</div><span class="tab-label">Home</span></div>
+        <div class="tab-item"><div class="tab-icon">🎯</div><span class="tab-label">Goals</span></div>
+        <div class="tab-item"><div class="tab-icon">📅</div><span class="tab-label">Calendar</span></div>
+        <div class="tab-item"><div class="tab-icon">📝</div><span class="tab-label">Notes</span></div>
+        <div class="tab-item active"><div class="tab-icon">📊</div><span class="tab-label" style="color:#7C5CF8">Analytics</span></div>
+        <div class="tab-item"><div class="tab-icon">⋯</div><span class="tab-label">More</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 5: MORE (Business / Travel)
+  ══════════════════════════════════════════ -->
+  <div class="screen-wrap">
+    <div class="screen-label">More</div>
+    <div class="phone">
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <span class="icons">▲ ● ▮▮▮</span>
+      </div>
+      <div class="screen-content" style="overflow-y:hidden">
+        <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:14px">More</div>
+
+        <!-- Section tabs -->
+        <div class="filter-row" style="margin-bottom:14px">
+          <div class="filter-chip" style="background:#7C5CF8;color:#fff">💼 Business</div>
+          <div class="filter-chip" style="background:rgba(92,156,248,0.12);color:#5C9CF8;border:1px solid rgba(92,156,248,0.25)">✈️ Travel</div>
+          <div class="filter-chip" style="background:rgba(248,92,200,0.1);color:#F85CC8;border:1px solid rgba(248,92,200,0.2)">📔 Journal</div>
+          <div class="filter-chip" style="background:rgba(144,144,176,0.1);color:#9090B0;border:1px solid rgba(144,144,176,0.2)">⚙️</div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="card" style="margin-bottom:10px;padding:12px 14px">
+          <div class="section-title" style="font-size:13px;margin-bottom:10px">KPI Dashboard</div>
+          <div class="kpi-grid">
+            <div class="kpi-box" style="background:rgba(124,92,248,0.08);border-color:rgba(124,92,248,0.2)">
+              <div class="kpi-label">MRR</div>
+              <div class="kpi-value" style="color:#7C5CF8">€0</div>
+              <div class="kpi-target">→ €5,000</div>
+            </div>
+            <div class="kpi-box" style="background:rgba(92,248,200,0.07);border-color:rgba(92,248,200,0.18)">
+              <div class="kpi-label">Subscribers</div>
+              <div class="kpi-value" style="color:#5CF8C8">127</div>
+              <div class="kpi-target">→ 1,000</div>
+            </div>
+            <div class="kpi-box" style="background:rgba(248,168,92,0.08);border-color:rgba(248,168,92,0.2)">
+              <div class="kpi-label">Content</div>
+              <div class="kpi-value" style="color:#F8A85C">12</div>
+              <div class="kpi-target">→ 52</div>
+            </div>
+            <div class="kpi-box" style="background:rgba(92,156,248,0.08);border-color:rgba(92,156,248,0.2)">
+              <div class="kpi-label">Books Read</div>
+              <div class="kpi-value" style="color:#5C9CF8">9</div>
+              <div class="kpi-target">→ 24</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Business Ideas -->
+        <div class="card" style="margin-bottom:10px;padding:12px 14px">
+          <div class="row-between" style="margin-bottom:10px">
+            <div class="section-title" style="font-size:13px;margin:0">Business Ideas</div>
+            <span style="font-size:12px;color:#7C5CF8">+ Add</span>
+          </div>
+          <div style="display:flex;align-items:center;padding:9px 0;border-bottom:1px solid #1E1E2E">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">Productivity App SaaS</div>
+              <div style="font-size:11px;color:#5050A0">In Progress</div>
+            </div>
+            <div class="badge" style="background:rgba(248,92,92,0.12);color:#F85C5C;font-size:10px">High</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:9px 0;border-bottom:1px solid #1E1E2E">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">Digital Course</div>
+              <div style="font-size:11px;color:#5050A0">Planning</div>
+            </div>
+            <div class="badge" style="background:rgba(248,200,92,0.12);color:#F8C85C;font-size:10px">Medium</div>
+          </div>
+          <div style="display:flex;align-items:center;padding:9px 0">
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">Coaching Community</div>
+              <div style="font-size:11px;color:#5050A0">Idea</div>
+            </div>
+            <div class="badge" style="background:rgba(144,144,176,0.12);color:#9090B0;font-size:10px">Low</div>
+          </div>
+        </div>
+
+        <!-- Content Pipeline -->
+        <div class="card" style="padding:12px 14px">
+          <div class="section-title" style="font-size:13px;margin-bottom:10px">🎬 Content Pipeline</div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1E1E2E">
+            <div style="width:30px;height:30px;border-radius:9px;background:rgba(124,92,248,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">▶</div>
+            <div style="flex:1;font-size:13px;font-weight:500">My Full Personal OS Tour</div>
+            <div class="badge" style="background:rgba(248,168,92,0.15);color:#F8A85C;font-size:9px">Idea</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1E1E2E">
+            <div style="width:30px;height:30px;border-radius:9px;background:rgba(124,92,248,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">▶</div>
+            <div style="flex:1;font-size:13px;font-weight:500">How I Plan My Year</div>
+            <div class="badge" style="background:rgba(92,156,248,0.15);color:#5C9CF8;font-size:9px">Script</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+            <div style="width:30px;height:30px;border-radius:9px;background:rgba(124,92,248,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">▶</div>
+            <div style="flex:1;font-size:13px;font-weight:500">Morning Routine 2026</div>
+            <div class="badge" style="background:rgba(248,168,92,0.15);color:#F8A85C;font-size:9px">Idea</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item"><div class="tab-icon">⚡</div><span class="tab-label">Home</span></div>
+        <div class="tab-item"><div class="tab-icon">🎯</div><span class="tab-label">Goals</span></div>
+        <div class="tab-item"><div class="tab-icon">📅</div><span class="tab-label">Calendar</span></div>
+        <div class="tab-item"><div class="tab-icon">📝</div><span class="tab-label">Notes</span></div>
+        <div class="tab-item"><div class="tab-icon">📊</div><span class="tab-label">Analytics</span></div>
+        <div class="tab-item active"><div class="tab-icon">⋯</div><span class="tab-label" style="color:#7C5CF8">More</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screens-row -->
+
+<!-- Color legend -->
+<div style="text-align:center;margin-top:48px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#7C5CF8"></div><span style="font-size:12px;color:#6060A0">Primary Purple</span></div>
+  <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#5CF8C8"></div><span style="font-size:12px;color:#6060A0">Teal Accent</span></div>
+  <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#F8A85C"></div><span style="font-size:12px;color:#6060A0">Orange Warm</span></div>
+  <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#0A0A0F;border:1px solid #2A2A3A"></div><span style="font-size:12px;color:#6060A0">Background #0A0A0F</span></div>
+  <div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:#1A1A26;border:1px solid #2A2A3A"></div><span style="font-size:12px;color:#6060A0">Card #1A1A26</span></div>
+</div>
+
+</body>
+</html>
